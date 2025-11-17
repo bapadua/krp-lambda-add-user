@@ -2,7 +2,7 @@
 
 ![Go](https://img.shields.io/badge/Go-1.21-00ADD8?logo=go)
 ![AWS Lambda](https://img.shields.io/badge/AWS-Lambda-FF9900?logo=amazon-aws)
-![Deploy](https://github.com/YOUR_USERNAME/krp-lambda-add-user/actions/workflows/deploy.yml/badge.svg)
+![Deploy](https://github.com/bapadua/krp-lambda-add-user/actions/workflows/deploy.yml/badge.svg)
 
 Lambda Function para adicionar usuários na plataforma Kids Rewards.
 
