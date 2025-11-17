@@ -1,0 +1,108 @@
+name: Deploy Lambda
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  LAMBDA_NAME: kids-rewards-platform-add-user-prod
+  S3_BUCKET: kids-rewards-platform-lambda-artifacts-prod
+  S3_KEY: add-user/add-user.zip
+  GO_VERSION: '1.21'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Download Dependencies
+        run: go mod download
+
+      - name: Run Tests
+        run: go test -v ./...
+
+      - name: Check Formatting
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go code is not formatted:"
+            gofmt -d .
+            exit 1
+          fi
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: test
+    environment: PROD
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download Dependencies
+        run: go mod download
+
+      - name: Build
+        run: |
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
+            go build -ldflags="-s -w" -o bootstrap main.go
+
+      - name: Package
+        run: zip lambda.zip bootstrap
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ARN_ROLE_SECRET }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp lambda.zip s3://${{ env.S3_BUCKET }}/${{ env.S3_KEY }}
+
+      - name: Update Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_NAME }} \
+            --s3-bucket ${{ env.S3_BUCKET }} \
+            --s3-key ${{ env.S3_KEY }}
+
+      - name: Wait for Update
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ env.LAMBDA_NAME }}
+
+      - name: Publish Version
+        run: |
+          VERSION=$(aws lambda publish-version \
+            --function-name ${{ env.LAMBDA_NAME }} \
+            --query 'Version' \
+            --output text)
+          echo "Published version: $VERSION"
+
+      - name: Success
+        run: |
+          echo "✅ Lambda deployed successfully!"
+          echo "Function: ${{ env.LAMBDA_NAME }}"
+          echo "Region: ${{ env.AWS_REGION }}"
+
