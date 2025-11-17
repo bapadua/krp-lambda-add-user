@@ -57,26 +57,44 @@ func HandleRequest(ctx context.Context, req Request) (Response, error) {
 		return errorResponse(400, "phone_number is required")
 	}
 
-	// Criar usuário
+	// Obter nome da tabela
+	tableName := os.Getenv("USERS_TABLE_NAME")
+	if tableName == "" {
+		return errorResponse(500, "USERS_TABLE_NAME environment variable not set")
+	}
+
+	// Criar usuário com UUID único
+	userID := uuid.New().String()
+	now := time.Now().UTC().Format(time.RFC3339)
+
 	user := User{
-		ID:          uuid.New().String(),
+		ID:          userID,
 		Name:        req.Name,
 		PhoneNumber: req.PhoneNumber,
 		Email:       req.Email,
 		Age:         req.Age,
 		Status:      "active",
-		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		CreatedAt:   now,
 	}
 
 	// Preparar item para DynamoDB
+	// Schema da tabela users:
+	// - Hash Key: id (String)
+	// - Range Key: phone_number (String)
+	// - GSI: name-index (name + created_at)
+	// - GSI: status-index (status + created_at)
 	item := map[string]types.AttributeValue{
+		// Chaves primárias (obrigatórias)
 		"id":           &types.AttributeValueMemberS{Value: user.ID},
 		"phone_number": &types.AttributeValueMemberS{Value: user.PhoneNumber},
-		"name":         &types.AttributeValueMemberS{Value: user.Name},
-		"status":       &types.AttributeValueMemberS{Value: user.Status},
-		"created_at":   &types.AttributeValueMemberS{Value: user.CreatedAt},
+
+		// Atributos para GSIs (obrigatórios)
+		"name":       &types.AttributeValueMemberS{Value: user.Name},
+		"status":     &types.AttributeValueMemberS{Value: user.Status},
+		"created_at": &types.AttributeValueMemberS{Value: user.CreatedAt},
 	}
 
+	// Atributos opcionais
 	if user.Email != "" {
 		item["email"] = &types.AttributeValueMemberS{Value: user.Email}
 	}
@@ -86,17 +104,13 @@ func HandleRequest(ctx context.Context, req Request) (Response, error) {
 	}
 
 	// Salvar no DynamoDB
-	tableName := os.Getenv("USERS_TABLE_NAME")
-	if tableName == "" {
-		return errorResponse(500, "USERS_TABLE_NAME environment variable not set")
-	}
-
+	// PutItem irá criar um novo item ou sobrescrever se já existir com mesma chave
 	_, err := dynamoClient.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: aws.String(tableName),
 		Item:      item,
 	})
 	if err != nil {
-		return errorResponse(500, fmt.Sprintf("failed to save user: %v", err))
+		return errorResponse(500, fmt.Sprintf("failed to save user to DynamoDB: %v", err))
 	}
 
 	// Resposta de sucesso
@@ -126,4 +140,3 @@ func errorResponse(code int, msg string) (Response, error) {
 func main() {
 	lambda.Start(HandleRequest)
 }
-
