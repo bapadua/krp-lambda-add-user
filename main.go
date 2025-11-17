@@ -18,8 +18,6 @@ import (
 type Request struct {
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
-	Email       string `json:"email,omitempty"`
-	Age         int    `json:"age,omitempty"`
 }
 
 type Response struct {
@@ -32,8 +30,6 @@ type User struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
-	Email       string `json:"email,omitempty"`
-	Age         int    `json:"age,omitempty"`
 	Status      string `json:"status"`
 	CreatedAt   string `json:"created_at"`
 }
@@ -71,8 +67,6 @@ func HandleRequest(ctx context.Context, req Request) (Response, error) {
 		ID:          userID,
 		Name:        req.Name,
 		PhoneNumber: req.PhoneNumber,
-		Email:       req.Email,
-		Age:         req.Age,
 		Status:      "active",
 		CreatedAt:   now,
 	}
@@ -87,20 +81,11 @@ func HandleRequest(ctx context.Context, req Request) (Response, error) {
 		// Chaves primárias (obrigatórias)
 		"id":           &types.AttributeValueMemberS{Value: user.ID},
 		"phone_number": &types.AttributeValueMemberS{Value: user.PhoneNumber},
-
+		
 		// Atributos para GSIs (obrigatórios)
 		"name":       &types.AttributeValueMemberS{Value: user.Name},
 		"status":     &types.AttributeValueMemberS{Value: user.Status},
 		"created_at": &types.AttributeValueMemberS{Value: user.CreatedAt},
-	}
-
-	// Atributos opcionais
-	if user.Email != "" {
-		item["email"] = &types.AttributeValueMemberS{Value: user.Email}
-	}
-
-	if user.Age > 0 {
-		item["age"] = &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", user.Age)}
 	}
 
 	// Salvar no DynamoDB

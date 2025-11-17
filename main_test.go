@@ -17,8 +17,6 @@ func TestValidateRequest(t *testing.T) {
 			request: Request{
 				Name:        "João Silva",
 				PhoneNumber: "+5511999999999",
-				Email:       "joao@example.com",
-				Age:         10,
 			},
 			shouldError: false,
 		},
@@ -86,8 +84,6 @@ func TestUserStructure(t *testing.T) {
 		ID:          "test-id",
 		Name:        "Test User",
 		PhoneNumber: "+5511999999999",
-		Email:       "test@example.com",
-		Age:         10,
 		Status:      "active",
 		CreatedAt:   "2025-11-17T12:00:00Z",
 	}
@@ -110,8 +106,6 @@ func TestRequestStructure(t *testing.T) {
 	req := Request{
 		Name:        "Test User",
 		PhoneNumber: "+5511999999999",
-		Email:       "test@example.com",
-		Age:         10,
 	}
 
 	if req.Name == "" {

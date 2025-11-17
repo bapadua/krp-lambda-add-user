@@ -31,19 +31,13 @@ API Gateway / EventBridge
 ```json
 {
   "name": "João Silva",
-  "phone_number": "+5511999999999",
-  "email": "joao@example.com",
-  "age": 10
+  "phone_number": "+5511999999999"
 }
 ```
 
 **Campos obrigatórios:**
 - `name` (string): Nome do usuário
 - `phone_number` (string): Número de telefone
-
-**Campos opcionais:**
-- `email` (string): Email do usuário
-- `age` (number): Idade do usuário
 
 ### Response (Output)
 
@@ -56,8 +50,6 @@ API Gateway / EventBridge
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "name": "João Silva",
     "phone_number": "+5511999999999",
-    "email": "joao@example.com",
-    "age": 10,
     "status": "active",
     "created_at": "2025-11-17T12:00:00Z"
   }
@@ -241,10 +233,8 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 | id | String | UUID único | HASH |
 | phone_number | String | Telefone | RANGE |
 | name | String | Nome completo | GSI |
-| email | String | Email (opcional) | - |
-| age | Number | Idade (opcional) | - |
 | status | String | Status (active/inactive) | GSI |
-| created_at | String | Timestamp ISO8601 | - |
+| created_at | String | Timestamp ISO8601 | GSI |
 
 ### Índices (GSI)
 
