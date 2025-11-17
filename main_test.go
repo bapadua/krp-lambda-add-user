@@ -115,4 +115,3 @@ func TestRequestStructure(t *testing.T) {
 		t.Error("Request PhoneNumber should not be empty")
 	}
 }
-

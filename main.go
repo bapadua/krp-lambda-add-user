@@ -81,7 +81,7 @@ func HandleRequest(ctx context.Context, req Request) (Response, error) {
 		// Chaves primárias (obrigatórias)
 		"id":           &types.AttributeValueMemberS{Value: user.ID},
 		"phone_number": &types.AttributeValueMemberS{Value: user.PhoneNumber},
-		
+
 		// Atributos para GSIs (obrigatórios)
 		"name":       &types.AttributeValueMemberS{Value: user.Name},
 		"status":     &types.AttributeValueMemberS{Value: user.Status},
